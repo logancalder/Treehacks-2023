@@ -1,4 +1,3 @@
-#Smart Shopper
 My personal contribution to the TreeHacks 2023 competition.
 
 Features an expandable chatbox UI within which the user may talk with a trained OpenAI JS React program.
