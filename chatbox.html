@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script src="https://kit.fontawesome.com/92c2b5b560.js" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+   /* CONSTANTS */
+   :root{
+      --highlight-color: #57BAE6;
+      --background-color: #D7D7D7;
+      --light-highlight-color: #17303C;
+      --dark-highlight-color: #D6D6D6;
+   }
+   /* Global Font Declaration */
+   body {
+      font-family: "Noto Sans", sans-serif;
+   }
+   /* Removing borders on all objects */
+   * {
+      box-sizing: border-box;
+      border: none;
+   }
+   /* Header edits
+   Sets header color to highlight, increases its size to color entire top portion of form */
+   h1{
+      background-color:var(--highlight-color);
+      width:100%;
+      margin:0;
+      border-radius: 15px 15px 0 0;
+   }
+   /* All buttons will have the "pointer" mouse option when hovering */
+   button{
+      cursor: pointer;
+   }
+   /* .chat-button is the blue button in bottom-right corner of screen.2
+   Sets: fixed, color, transition speed, location, and text align */
+   .chat-button {
+      transition: background-color 0.1s; /* Transition for when clicked on */
+      
+      /* Initial color and smoothing values */
+      background: var(--highlight-color); /* Background color */
+      color: white; /* Text color */
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0,0,0,.3);
+
+      /* Initial location of button */
+      position: fixed;
+      right:5px;
+      bottom: 5px;
+      margin: 30px;
+
+      /* Size and display of button */
+      display: block;
+      height: 5rem;
+      width: 5rem;
+      text-align: center; /* Text is centered on button */
+
+      /* Transition for when the button is clicked on and expands */
+      transition: all 500ms cubic-bezier(.93,.1,.42,.91); 
+   }
+   /* How button displays when clicked on. If the click off button, 
+   reverts to .chat-button */
+   .chat-button:focus{
+      /* Color and smoothing values */
+      background-color: var(--background-color);
+      border-radius:15px;
+      
+      /* Location of the button */
+      margin-bottom: 50px;
+      margin-right: 33px;
+      position:fixed;
+      right:20px;
+      bottom: 30px;
+
+      /* Shape that button becomes (rectangle) */
+      transform: translateX(10%) translateY(10%);
+      width: 320px;
+      height:600px;   
+   }
+   /* By default has no display, when shown will cause the chat to open. */
+   .openChat {
+      display: none; /* This is changed by the scripts later on */
+      position: fixed;
+      bottom: 0;
+      right: 15px;
+      z-index: 9; 
+   }
+   /* Displaying .title, .header-bg, and button inline so that they can exist on the same horizontal axis. */
+   .title, .header-bg, button {
+      display:inline-block;
+   }
+   /* Positioning for the 'X' to close out the chat window. */
+   .close{
+      position: fixed;
+      right:3px;
+      top:-4px;
+   }
+   /* Positioning for the send button to close out the chat window. */
+   .openChat{
+      text-align:center;
+   }
+   /* "Welcome to Smart Help" title */
+   .title{
+      /* Editing font setting for the "Welcome to Smart Help" title */
+      font-family: "Noto Sans", sans-serif;
+      font-weight:550;
+      color: white;
+      font-size:15px;
+
+      /* Positioning title */
+      margin-top:0px;
+      padding:20px;
+      text-align: center;
+      align-items: center;
+   }
+   /* Settings for the form (chatbox) */
+   form {
+      /* Rounding, size, and color */
+      border-radius:15px;
+      width: 320px;
+      height:600px;
+      background-color: var(--background-color);
+
+      /* Positioning the form */
+      right:20px;
+      bottom: 30px;
+      position:fixed;
+   }
+   /* Editing both text box areas (user and AI) */
+   form textarea, .response {
+      /* Font settings and color */
+      font-weight:550;
+      font-family: "Noto Sans", sans-serif;
+      font-size: 18px;
+      color: black;
+      text-align:left; /* Text starts on the left side of the chat box */
+
+      /* Padding for text (how far inset it is) */
+      padding:25px;
+      padding-bottom:0px;
+      border-radius: 15px 15px 0 15px;
+      
+      /* Sizing and background */
+      width: 100%;
+      margin: 5px 0 22px 0;
+      resize: none;
+      min-height: 250px;
+      background: transparent;
+      display:inline-block; /* Used for stacking chat boxes in form */
+   }
+   /* Div containing the AI response text */
+   .response{
+      width:280px;
+      
+      /* Text formatting */
+      margin-top:50px;
+      word-wrap:break-word;
+
+      /* Transition speed */
+      transition: all 0.2s;    
+   }
+   /* Text box in form that allows user to input a string */
+   form textarea{
+      /* Text formatting */
+      font-weight:550;
+      color: rgb(0, 0, 0);
+      margin: 5px 0 22px 0;
+      margin-left:10px;
+      padding-right:50px;
+
+      /* Sizing and color of background */
+      width: 280px;
+      min-height: 170px;
+      background: white;
+      resize: none;
+   }
+   /* When typing in textarea, will be lighter */
+   form textarea:focus {
+      background-color: white;
+      outline: none;
+   }
+   /* Both buttons (close and send) on form */
+   form .btn{
+      /* Background and positioning */
+      background-color: transparent; /* This gets changed when hover */
+      background-size:5px 5px;
+      border-radius: 40%;
+      
+      /* Text formatting */
+      padding: 0;
+      text-align: center;
+      
+      /* Transition speed */
+      transition: background-color 0.2s;
+   }
+
+   /* Change color of close button background when hover */
+   form .close:hover,.chat-button:hover{
+      background-color: var(--light-highlight-color);
+   }
+
+   /* Change color of send button background when hover */
+   form .send:hover{
+      background-color: var(--dark-highlight-color);
+   }
+
+   /* The send button and its formatting */
+   form .send {   
+      /* Sizing */
+      height:40px;
+      width:40px;
+      margin-top:-5px;
+      margin-right:-5px;
+
+      /* Positioning */
+      position: fixed;
+      right: 50px;
+      bottom: 80px; 
+      
+      /* Color */
+      color: var(--light-highlight-color);
+   }
+
+   /* The close button and its formatting */
+   form .close {
+      /* Sizing */
+      height:35px;
+      width:35px;
+
+      /* Positioning */
+      position: fixed;
+      margin-top:10px;
+      margin-right:10px;
+      right:30px;
+      top:50px;
+
+      /* Color */
+      color: white;
+   }
+
+   /* Change cursor to a pointer when hovering over a button */
+   form .btn:hover, .openChatBtn:hover {
+      cursor: pointer;
+      transition: all 1s;
+   }
+
+   /* Form background settings */
+   .form-bg{
+      /* Sizing */
+      border-radius:15px;
+      width: 320px;
+      height:600px;
+      
+      /* Positioning */
+      right:20px;
+      bottom: 20px;
+      position:fixed;
+
+      /* Color */
+      background-color: var(--highlight-color);
+   }
+
+   /* Bot profile picture formatting */
+   .bot-img{
+      
+      /* Sizing */
+      margin-left:5px;
+      margin-top:25px;
+
+      /* Positioning */
+      left: 0;
+
+      /* Transition Details */
+      opacity: 0; /* Start out invisible */
+      transition:all .2s; /* Transition speed */
+   }
+
+   /* User profile picture formatting */
+   .user-img{
+
+      /* Positioning */
+      bottom:0;
+      right:0;
+
+      /* Sizing */ 
+      margin-right:5px;
+      margin-bottom:185px; 
+   }
+
+   .bot-img, .user-img{
+
+      /* Sizing */
+      width:50px;
+      height:50px;
+
+      /* Formatting */
+      z-index: 1; /* Setting pfp above div, otherwise will be below */
+      position: absolute; /* Used so that doesn't interfere with div */
+      border: 1px solid #2b383e; /* Outline on pfp */
+
+      border-radius: 50%;
+   }
+</style>
+</head>
+<body>
+<!-- Circuluar button that appears in bottom right of screen
+When clicked opens up a chat with AI
+On click runs openForm(), making the form visible -->
+<button class="chat-button" onclick="openForm()"><i class="fa-solid fa-comment fa-3x"></i></button>
+<!-- Div used for opening/closing the chat, interacts with openForm()
+Class: openChat -->
+<div class="openChat" class = "openChat">
+   <!-- Script that will create the AI text box (change its color) &
+   make robot pfp visible
+   function handleFormSubmit(event):
+      if userinput is a string that is not "": change color & make pfp visible  -->
+   <script>
+      function handleFormSubmit(event) {
+         event.preventDefault(); // Prevent the default form submission behavior
+         var textareaValue = document.getElementById("userInput").value; // Retrieve the value of the textarea
+         var myImage = document.getElementById("robot_img")
+         document.getElementById("myDiv").innerHTML = textareaValue; // Insert the textarea value into the div element
+         
+         var response_bg = document.getElementById("response"); // Response div
+         if((textareaValue != undefined) && (textareaValue != "")){ // Ensure string isn't empty
+            myDiv.style.backgroundColor = "#F1F1F1"; // Update background color
+            myImage.style.opacity = "1"; // Update opacity to visible
+
+         } else{
+            null; // Do nothing
+         }
+      
+      }
+      </script>
+   </head>
+   <!-- Form definition and creation -->
+   <body>
+      <!-- Background for form, the small blue bit you see below it -->
+      <div class = "form-bg"></div>
+      <!-- Form with onsubmit to run handleFormSubmit(event)
+      This command causes the response to be updated -->
+      <form onsubmit="handleFormSubmit(event)">
+         <!-- Message displayed on top blue bar -->
+         <h1 class = "title",id="menu-header">Welcome to Smart Help</h1> 
+         <!-- Button that closes form if clicked (makes not visible) -->
+         <button type="button" class="btn close" onclick="closeForm()"><i class="fa-solid fa-xmark fa-2x"></i></button>
+         <!-- Div for robot pfp -->
+         <div><img src = "img_robot.png" class = "bot-img" id = "robot_img"</img></div>
+         <!-- a for user pfp -->
+         <a><img src = "img_user.jpeg" class = "user-img"></img></a>
+         <!-- Div for response chatbox -->
+         <div id="myDiv" class = "response"></div>
+         <!-- Textarea for userInput
+         Placeholder: "Get started by typing a question..."
+         Obtains user input. --> 
+         <textarea id="userInput" placeholder = "Get started by typing a question..."></textarea>
+         <!-- Button that submits the written text if clicked -->
+         <button type="submit" class="btn send"/><i class="fa-sharp fa-solid fa-paper-plane fa-2x"></i></button>
+      </form>
+      </div>
+   <!-- Script used for opening/closing the form (chat window).
+   If the open chat button (.openChatBtn) is clicked, openForm will be executed
+      Delay of 280ms to account for animation time when button clicked.
+   If the close chat button (.close) is clicked, closeForm will be executed -->
+   <script>
+      document .querySelector(".openChatBtn") .addEventListener("click", openForm);
+      document.querySelector(".close").addEventListener("click", closeForm);
+      // openForm() >>> Opens the chat menu
+      function openForm() {
+         setTimeout(function() {
+            document.querySelector(".openChat").style.display = "block";
+         }, 280); // Delay 280 for animation time
+         
+      }
+      // closeForm() >>> Closes the chat menu
+      function closeForm() {
+         document.querySelector(".openChat").style.display = "none";
+      }
+   </script>
+</body>
+</html>
